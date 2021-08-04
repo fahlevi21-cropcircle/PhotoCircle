@@ -2,15 +2,17 @@ package com.cropcircle.photocircle.ui.home
 
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
+import android.view.*
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.NavigationUI
 import androidx.navigation.ui.setupWithNavController
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.GridLayoutManager
@@ -33,6 +35,7 @@ class HomeFragment : Fragment(), HomePagingAdapter.OnItemClickListener {
     //private lateinit var viewModel: HomeViewModel
     private var _binding: HomeFragmentBinding? = null
     private val binding get() = _binding!!
+    private lateinit var adapter: HomePagingAdapter
     private val viewModel by viewModels<HomeViewModel>()
 
     override fun onCreateView(
@@ -44,18 +47,27 @@ class HomeFragment : Fragment(), HomePagingAdapter.OnItemClickListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setHasOptionsMenu(true)
 
         _binding = HomeFragmentBinding.bind(view)
 
-        val navController = findNavController()
+
+
+        val navController = NavHostFragment.findNavController(this)
         val appBarConfiguration = AppBarConfiguration(navController.graph)
-        binding.mainToolbar.setupWithNavController(navController,appBarConfiguration)
+        NavigationUI.setupWithNavController(binding.mainToolbar, navController, appBarConfiguration)
+        (activity as MainActivity).setSupportActionBar(binding.mainToolbar)
+
+        binding.mainToolbar.setNavigationOnClickListener { v->
+            v.findNavController().navigateUp()
+        }
         //(activity as MainActivity).title = "Latest Photos"
 
-        val adapter = HomePagingAdapter(this)
+        adapter = HomePagingAdapter(this)
 
         binding.apply {
-            binding.rcHome.layoutManager = GridLayoutManager(context, 2)
+            rcHome.setHasFixedSize(true)
+            rcHome.layoutManager = GridLayoutManager(context, 2)
             rcHome.addItemDecoration(
                 LatestPhotoItemDecoration(
                     resources.getDimensionPixelSize(R.dimen.small_layout_margin),
@@ -70,6 +82,9 @@ class HomeFragment : Fragment(), HomePagingAdapter.OnItemClickListener {
                 header = HomeLoadStateAdapter { adapter.retry() },
                 footer = HomeLoadStateAdapter { adapter.retry() }
             )
+            homeBtnRetry.setOnClickListener {
+                adapter.retry()
+            }
         }
 
         adapter.addLoadStateListener {
@@ -95,7 +110,43 @@ class HomeFragment : Fragment(), HomePagingAdapter.OnItemClickListener {
         queries["order_by"] = "latest"
         viewModel.setQueries(queries)
 
+        searchPhoto()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_home, menu)
+
+        val searchItem = menu.findItem(R.id.action_menu_main_search)
+        val searchView = searchItem.actionView as SearchView
+
+        searchView.setOnQueryTextListener(
+            object : SearchView.OnQueryTextListener {
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    //do nothing
+                    return true
+                }
+
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    if (query != null){
+                        binding.rcHome.scrollToPosition(0)
+                        viewModel.search(query)
+                        searchPhoto()
+                        searchView.clearFocus()
+                    }
+                    return true
+                }
+            },
+        )
+    }
+
+    private fun observeLatestPhoto(){
         viewModel.latestPhotos.observe(viewLifecycleOwner) {
+            adapter.submitData(viewLifecycleOwner.lifecycle, it)
+        }
+    }
+
+    private fun searchPhoto(){
+        viewModel.searchedPhotos.observe(viewLifecycleOwner) {
             adapter.submitData(viewLifecycleOwner.lifecycle, it)
         }
     }

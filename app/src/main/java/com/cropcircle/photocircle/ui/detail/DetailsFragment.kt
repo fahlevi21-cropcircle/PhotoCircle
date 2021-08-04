@@ -7,9 +7,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.viewModels
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.NavigationUI
 import androidx.navigation.ui.setupWithNavController
 import com.bumptech.glide.Glide
 import com.cropcircle.photocircle.MainActivity
@@ -29,11 +32,15 @@ class DetailsFragment : Fragment(R.layout.details_fragment) {
         super.onViewCreated(view, savedInstanceState)
 
         val binding = DetailsFragmentBinding.bind(view)
-
-        val navController = findNavController()
-        val appBarConfiguration = AppBarConfiguration(navController.graph)
-        binding.mainToolbar.setupWithNavController(navController,appBarConfiguration)
+        (activity as MainActivity).setSupportActionBar(binding.mainToolbar)
         (activity as MainActivity).title = null
+
+        val navController = NavHostFragment.findNavController(this)
+        NavigationUI.setupWithNavController(binding.mainToolbar, navController)
+
+        binding.mainToolbar.setNavigationOnClickListener { v->
+            v.findNavController().navigateUp()
+        }
 
         CoroutineScope(Dispatchers.Main).launch {
             viewModel.getDetails(args.photoId).also {

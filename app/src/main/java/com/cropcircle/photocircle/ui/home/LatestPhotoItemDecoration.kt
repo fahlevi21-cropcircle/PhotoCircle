@@ -55,18 +55,18 @@ class LatestPhotoItemDecoration(
                 ItemLayout.GRID_TWO_SPAN ->
                     when {
                         parent.getChildAdapterPosition(view) == 0 -> {
-                            outRect.top = resources.getDimensionPixelSize(R.dimen.layout_margin)
-                            outRect.left = resources.getDimensionPixelSize(R.dimen.layout_margin)
+                            outRect.top = resources.getDimensionPixelSize(R.dimen.small_layout_margin)
+                            outRect.left = resources.getDimensionPixelSize(R.dimen.small_layout_margin)
                         }
                         parent.getChildAdapterPosition(view) == 1 -> {
-                            outRect.top = resources.getDimensionPixelSize(R.dimen.layout_margin)
-                            outRect.right = resources.getDimensionPixelSize(R.dimen.layout_margin)
+                            outRect.top = resources.getDimensionPixelSize(R.dimen.small_layout_margin)
+                            outRect.right = resources.getDimensionPixelSize(R.dimen.small_layout_margin)
                         }
                         parent.getChildAdapterPosition(view) % 2 == 0 -> {
-                            outRect.left = resources.getDimensionPixelSize(R.dimen.layout_margin)
+                            outRect.left = resources.getDimensionPixelSize(R.dimen.small_layout_margin)
                         }
                         parent.getChildAdapterPosition(view) % 2 != 0 -> {
-                            outRect.right = resources.getDimensionPixelSize(R.dimen.layout_margin)
+                            outRect.right = resources.getDimensionPixelSize(R.dimen.small_layout_margin)
                         }
                     }
                 else -> top = 56

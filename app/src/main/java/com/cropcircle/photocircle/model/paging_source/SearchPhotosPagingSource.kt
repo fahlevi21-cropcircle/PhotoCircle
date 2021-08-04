@@ -11,33 +11,35 @@ private const val STARTING_INDEX = 1
 
 class SearchPhotosPagingSource(
     private val api: UnsplashApi,
-    private val queries: MutableMap<String, String>
-) : PagingSource<Int, PhotoItem>(){
+    private val queries: String
+) : PagingSource<Int, PhotoItem>() {
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, PhotoItem> {
         val position = params.key ?: STARTING_INDEX
 
         return try {
             //update Map values using put from MutableMap
-            queries["per_page"] = params.loadSize.toString()
-            queries["page"] = position.toString()
-            val response = api.searchPhoto(queries).results
+            val queryMap = mutableMapOf<String, String>()
+            queryMap["query"] = queries
+            queryMap["per_page"] = params.loadSize.toString()
+            queryMap["page"] = position.toString()
+            val response = api.searchPhoto(queryMap).results
 
             LoadResult.Page(
                 data = response,
                 prevKey = if (position == STARTING_INDEX) null else position - 1,
                 nextKey = if (response.isEmpty()) null else position + 1
             )
-        }catch (exception: IOException){
+        } catch (exception: IOException) {
             LoadResult.Error(exception)
-        }catch (exception: HttpException){
+        } catch (exception: HttpException) {
             LoadResult.Error(exception)
         }
     }
 
     override fun getRefreshKey(state: PagingState<Int, PhotoItem>): Int? {
         return state.anchorPosition?.let { anchorPosition ->
-            state.closestPageToPosition(anchorPosition)?.prevKey?.plus(1) ?:
-            state.closestPageToPosition(anchorPosition)?.nextKey?.minus(1)
+            state.closestPageToPosition(anchorPosition)?.prevKey?.plus(1)
+                ?: state.closestPageToPosition(anchorPosition)?.nextKey?.minus(1)
         }
     }
 }
