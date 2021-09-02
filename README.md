@@ -9,8 +9,8 @@ to make it easier
 4. Download photo to your device
 
 # 3rd party Libraries used
-1. Material Components (com.google.android.material)
-2. Dagger Hilt (com.google.dagger:hilt-android:2.38.1)
-3. Retrofit (com.squareup.retrofit2:retrofit:2.9.0)
-4. Glide (com.github.bumptech.glide:glide:4.12.0)
-5. CircleImageView (de.hdodenhof:circleimageview:3.1.0)
+1. [Material Components](https://material.io)
+2. [Dagger Hilt](https://dagger.dev/hilt/)
+3. [Retrofit](https://square.github.io/retrofit/)
+4. [Glide](https://github.com/bumptech/glide)
+5. [CircleImageView](https://github.com/hdodenhof/CircleImageView)
