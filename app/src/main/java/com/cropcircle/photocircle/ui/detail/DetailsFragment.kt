@@ -109,16 +109,18 @@ class DetailsFragment : Fragment(R.layout.details_fragment) {
         viewModel.details.observe(
             viewLifecycleOwner,
             { data ->
-                photo = data
-                Glide.with(this@DetailsFragment)
-                    .load(data.urls.regular)
-                    .fitCenter()
-                    .into(binding.photoDetailImage)
-                binding.layoutContent.photoDetailUsername.text = data.user.name
-                if (data.description.isNotEmpty()){
-                    binding.layoutContent.photoDetailAttribution.text = data.description
-                }else{
-                    binding.layoutContent.photoDetailAttribution.text = data.altDescription
+                if (data != null){
+                    photo = data
+                    Glide.with(this@DetailsFragment)
+                        .load(data.urls.regular)
+                        .fitCenter()
+                        .into(binding.photoDetailImage)
+                    binding.layoutContent.photoDetailUsername.text = data.user.name
+                    if (data.description != null){
+                        binding.layoutContent.photoDetailAttribution.text = data.description
+                    }else{
+                        binding.layoutContent.photoDetailAttribution.text = data.altDescription
+                    }
                 }
             },
         )

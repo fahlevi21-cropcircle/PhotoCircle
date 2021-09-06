@@ -64,20 +64,23 @@ class HomeFragment : Fragment(), HomePagingAdapter.OnItemClickListener {
         //(activity as MainActivity).title = "Latest Photos"
 
         adapter = HomePagingAdapter(this)
+        val layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
+        layoutManager.gapStrategy = StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS
 
         binding.apply {
             rcHome.setHasFixedSize(true)
-            rcHome.layoutManager = GridLayoutManager(context, 2)
-            rcHome.addItemDecoration(
+            rcHome.layoutManager = layoutManager
+            /*rcHome.addItemDecoration(
                 LatestPhotoItemDecoration(
                     resources.getDimensionPixelSize(R.dimen.small_layout_margin),
                     resources.getDimensionPixelSize(R.dimen.small_layout_margin),
                     0,
                     resources.getDimensionPixelSize(R.dimen.margin_8),
                     resources,
-                    ItemLayout.GRID_TWO_SPAN
+                    ItemLayout.STAGGERED_TWO_SPAN
                 )
-            )
+            )*/
+            rcHome.animation = null
             rcHome.adapter = adapter.withLoadStateHeaderAndFooter(
                 header = HomeLoadStateAdapter { adapter.retry() },
                 footer = HomeLoadStateAdapter { adapter.retry() }

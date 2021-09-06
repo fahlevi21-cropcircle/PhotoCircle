@@ -5,10 +5,13 @@ import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.cropcircle.photocircle.databinding.ItemLatestPhotoBinding
 import com.cropcircle.photocircle.model.PhotoItem
+import kotlin.random.Random
+import kotlin.random.nextInt
 
 class HomePagingAdapter(
    private val listener: OnItemClickListener
@@ -22,7 +25,12 @@ class HomePagingAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = getItem(position)
+        val randomChildPosition = Random.nextInt(itemCount)
+        val layoutParams = holder.itemView.layoutParams as StaggeredGridLayoutManager.LayoutParams
 
+        if (position == randomChildPosition){
+            layoutParams.isFullSpan = true
+        }
         if (item != null) {
             holder.bind(item)
         }
@@ -44,15 +52,18 @@ class HomePagingAdapter(
         }
 
         fun bind(photoItem: PhotoItem) {
+            val sizeList = listOf(350,435,450,320,645,580)
+            val randSize = sizeList.random()
             binding.apply {
                 Glide.with(itemView)
                     .load(photoItem.urls.thumb)
-                    .fitCenter()
+                    .override(200, randSize)
+                    .thumbnail(0.3f)
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .into(itemLatestPhotoImg)
 
-                itemLatestPhotoUsername.text = photoItem.user.username
-                itemLatestPhotoDescription.text = photoItem.altDescription
+                /*itemLatestPhotoUsername.text = photoItem.user.username
+                itemLatestPhotoDescription.text = photoItem.altDescription*/
             }
         }
     }
