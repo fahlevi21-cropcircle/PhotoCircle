@@ -6,6 +6,7 @@ import androidx.core.view.isVisible
 import androidx.paging.LoadState
 import androidx.paging.LoadStateAdapter
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.cropcircle.photocircle.databinding.LayoutLoadStateFooterBinding
 
 class HomeLoadStateAdapter(private val retry:() -> Unit) : LoadStateAdapter<HomeLoadStateAdapter.ViewHolder>(){
@@ -16,6 +17,9 @@ class HomeLoadStateAdapter(private val retry:() -> Unit) : LoadStateAdapter<Home
     }
 
     override fun onBindViewHolder(holder: ViewHolder, loadState: LoadState) {
+        val layoutParams = holder.itemView.layoutParams as StaggeredGridLayoutManager.LayoutParams
+        layoutParams.isFullSpan = loadState is LoadState.Loading
+        layoutParams.isFullSpan = loadState is LoadState.Error
         holder.bind(loadState)
     }
 

@@ -1,22 +1,45 @@
 package com.cropcircle.photocircle.ui.home
 
-import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.*
 import androidx.paging.cachedIn
+import com.cropcircle.photocircle.model.PhotoItem
 import com.cropcircle.photocircle.network.UnsplashRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    repository: UnsplashRepository,
+    private val repository: UnsplashRepository,
     stateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    init {
+        loadLatestPhotos()
+        loadPopularPhotos()
+    }
+
     private val currentQueries = MutableLiveData(DEFAULT_QUERY)
     private val searchQuery = stateHandle.getLiveData(CURRENT_SEARCH_QUERY, DEFAULT_SEARCH_QUERY)
+    private val _latestPhotos = MutableLiveData<List<PhotoItem>>()
+    private val _popularPhotos = MutableLiveData<List<PhotoItem>>()
 
-    val latestPhotos = currentQueries.switchMap { queries ->
-        repository.getLatestPhotos(queries).cachedIn(viewModelScope)
+    val latestPhotos get() = _latestPhotos
+    val popularPhotos get() = _popularPhotos
+
+    private fun loadLatestPhotos() = viewModelScope.launch {
+        repository.fetchLatestPhoto()
+            .collect {
+                _latestPhotos.postValue(it)
+            }
+    }
+
+    private fun loadPopularPhotos() = viewModelScope.launch {
+        repository.fetchPopularPhoto()
+            .collect {
+                _popularPhotos.postValue(it)
+            }
     }
 
     val searchedPhotos = searchQuery.switchMap { q ->

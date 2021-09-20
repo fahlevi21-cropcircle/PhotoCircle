@@ -3,13 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main_navigation"
-    app:startDestination="@id/homeFragment">
+    app:startDestination="@id/nav_home">
 
     <fragment
-        android:id="@+id/homeFragment"
+        android:id="@+id/nav_home"
         android:name="com.cropcircle.photocircle.ui.home.HomeFragment"
-        android:label="Home"
-        tools:layout="@layout/home_fragment" >
+        tools:layout="@layout/home_fragment">
         <action
             android:id="@+id/action_homeFragment_to_detailsFragment"
             app:destination="@id/detailsFragment" />
@@ -22,4 +21,8 @@
             android:name="photoId"
             app:argType="string" />
     </fragment>
+    <fragment
+        android:id="@+id/nav_collection"
+        android:name="com.cropcircle.photocircle.ui.collection.CollectionsFragment"
+        tools:layout="@layout/collections_fragment" />
 </navigation>

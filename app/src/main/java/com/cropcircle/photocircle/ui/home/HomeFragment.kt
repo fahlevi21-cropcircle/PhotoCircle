@@ -1,36 +1,27 @@
 package com.cropcircle.photocircle.ui.home
 
-import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import android.view.*
 import androidx.fragment.app.Fragment
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
-import androidx.core.view.isVisible
+import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.viewModels
-import androidx.navigation.findNavController
-import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.NavigationUI
-import androidx.navigation.ui.setupWithNavController
-import androidx.paging.LoadState
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import androidx.viewpager2.widget.ViewPager2
 import com.cropcircle.photocircle.MainActivity
 import com.cropcircle.photocircle.R
 import com.cropcircle.photocircle.databinding.HomeFragmentBinding
-import com.cropcircle.photocircle.model.ItemLayout
+import com.cropcircle.photocircle.model.PhotoItem
+import com.google.android.material.card.MaterialCardView
+import com.google.android.material.transition.MaterialFadeThrough
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.home_fragment.*
+import kotlinx.android.synthetic.main.details_fragment.*
 
 @AndroidEntryPoint
-class HomeFragment : Fragment(), HomePagingAdapter.OnItemClickListener {
-
-    companion object {
-        fun newInstance() = HomeFragment()
-    }
+class HomeFragment : Fragment(R.layout.home_fragment), HomePagingAdapter.OnItemClickListener {
 
     //private lateinit var viewModel: HomeViewModel
     private var _binding: HomeFragmentBinding? = null
@@ -38,11 +29,12 @@ class HomeFragment : Fragment(), HomePagingAdapter.OnItemClickListener {
     private lateinit var adapter: HomePagingAdapter
     private val viewModel by viewModels<HomeViewModel>()
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.home_fragment, container, false)
+    private val latestAdapter = LatestPhotoRecyclerAdapter()
+    private val popularAdapter = PopularPhotoRecyclerAdapter()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enterTransition = MaterialFadeThrough()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -51,26 +43,53 @@ class HomeFragment : Fragment(), HomePagingAdapter.OnItemClickListener {
 
         _binding = HomeFragmentBinding.bind(view)
 
+        postponeEnterTransition()
 
-
-        val navController = NavHostFragment.findNavController(this)
-        val appBarConfiguration = AppBarConfiguration(navController.graph)
-        NavigationUI.setupWithNavController(binding.mainToolbar, navController, appBarConfiguration)
-        (activity as MainActivity).setSupportActionBar(binding.mainToolbar)
-
-        binding.mainToolbar.setNavigationOnClickListener { v->
-            v.findNavController().navigateUp()
-        }
+        /* val navController = NavHostFragment.findNavController(this)
+         val appBarConfiguration = AppBarConfiguration(navController.graph)
+         NavigationUI.setupWithNavController(binding.mainToolbar, navController, appBarConfiguration)*/
+        //(activity as MainActivity).setSupportActionBar(binding.mainToolbar)
+        //(activity as MainActivity).title = null
+        (activity as MainActivity).setupNavComponents(false)
         //(activity as MainActivity).title = "Latest Photos"
 
-        adapter = HomePagingAdapter(this)
+        /*adapter = HomePagingAdapter(this)
         val layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
-        layoutManager.gapStrategy = StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS
+        layoutManager.gapStrategy = StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS*/
+
+        latestAdapter.onItemClickListener(
+            object : LatestPhotoRecyclerAdapter.OnItemClickListener{
+                override fun onClick(item: PhotoItem, view: View, position: Int) {
+                    val action = HomeFragmentDirections.actionHomeFragmentToDetailsFragment(item.id)
+                    findNavController().navigate(action)
+                }
+            }
+        )
+
+        popularAdapter.onItemClickListener(
+            object : PopularPhotoRecyclerAdapter.OnItemClickListener{
+                override fun onClick(item: PhotoItem, view: View, position: Int) {
+                    val action = HomeFragmentDirections.actionHomeFragmentToDetailsFragment(item.id)
+                    findNavController().navigate(action)
+                }
+            }
+        )
 
         binding.apply {
+            pagerLatestPhoto.offscreenPageLimit = 2
+            pagerLatestPhoto.adapter = latestAdapter
+            pagerLatestPhoto.orientation = ViewPager2.ORIENTATION_HORIZONTAL
+
+            popularRc.adapter = popularAdapter
+            popularRc.setHasFixedSize(true)
+            popularRc.layoutManager = LinearLayoutManager(context)
+        }
+
+        /*binding.apply {
+            mainToolbar.setNavigationIcon(R.drawable.ic_baseline_photo)
             rcHome.setHasFixedSize(true)
             rcHome.layoutManager = layoutManager
-            /*rcHome.addItemDecoration(
+            *//*rcHome.addItemDecoration(
                 LatestPhotoItemDecoration(
                     resources.getDimensionPixelSize(R.dimen.small_layout_margin),
                     resources.getDimensionPixelSize(R.dimen.small_layout_margin),
@@ -79,8 +98,7 @@ class HomeFragment : Fragment(), HomePagingAdapter.OnItemClickListener {
                     resources,
                     ItemLayout.STAGGERED_TWO_SPAN
                 )
-            )*/
-            rcHome.animation = null
+            )*//*
             rcHome.adapter = adapter.withLoadStateHeaderAndFooter(
                 header = HomeLoadStateAdapter { adapter.retry() },
                 footer = HomeLoadStateAdapter { adapter.retry() }
@@ -107,13 +125,14 @@ class HomeFragment : Fragment(), HomePagingAdapter.OnItemClickListener {
                     homeTextEmpty.isVisible = false
                 }
             }
-        }
+        }*/
 
-        val queries = mutableMapOf<String, String>()
+        /*val queries = mutableMapOf<String, String>()
         queries["order_by"] = "latest"
-        viewModel.setQueries(queries)
+        viewModel.setQueries(queries)*/
 
-        searchPhoto()
+        observeLatestPhoto()
+        observePopularPhoto()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -130,8 +149,8 @@ class HomeFragment : Fragment(), HomePagingAdapter.OnItemClickListener {
                 }
 
                 override fun onQueryTextSubmit(query: String?): Boolean {
-                    if (query != null){
-                        binding.rcHome.scrollToPosition(0)
+                    if (query != null) {
+                        //binding.rcHome.scrollToPosition(0)
                         viewModel.search(query)
                         searchPhoto()
                         searchView.clearFocus()
@@ -142,13 +161,31 @@ class HomeFragment : Fragment(), HomePagingAdapter.OnItemClickListener {
         )
     }
 
-    private fun observeLatestPhoto(){
+    private fun observeLatestPhoto() {
         viewModel.latestPhotos.observe(viewLifecycleOwner) {
-            adapter.submitData(viewLifecycleOwner.lifecycle, it)
+            if (it != null){
+                view?.doOnPreDraw {
+                    startPostponedEnterTransition()
+                }
+                latestAdapter.setList(it)
+            }
+            //adapter.submitData(viewLifecycleOwner.lifecycle, it)
         }
     }
 
-    private fun searchPhoto(){
+    private fun observePopularPhoto() {
+        viewModel.popularPhotos.observe(viewLifecycleOwner) {
+            /*if (it != null){
+                view?.doOnPreDraw {
+                    startPostponedEnterTransition()
+                }
+            }*/
+            //adapter.submitData(viewLifecycleOwner.lifecycle, it)
+            popularAdapter.setList(it)
+        }
+    }
+
+    private fun searchPhoto() {
         viewModel.searchedPhotos.observe(viewLifecycleOwner) {
             adapter.submitData(viewLifecycleOwner.lifecycle, it)
         }
@@ -159,9 +196,11 @@ class HomeFragment : Fragment(), HomePagingAdapter.OnItemClickListener {
         _binding = null
     }
 
-    override fun onClick(id: String) {
+    override fun onClick(id: String, cardView: MaterialCardView) {
         val action = HomeFragmentDirections.actionHomeFragmentToDetailsFragment(id)
-        findNavController().navigate(action)
+        val transitionName = getString(R.string.shared_transition_name)
+        val extras = FragmentNavigatorExtras(cardView to transitionName)
+        findNavController().navigate(action, extras)
     }
 
 }

@@ -10,6 +10,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.cropcircle.photocircle.databinding.ItemLatestPhotoBinding
 import com.cropcircle.photocircle.model.PhotoItem
+import com.google.android.material.card.MaterialCardView
 import kotlin.random.Random
 import kotlin.random.nextInt
 
@@ -28,11 +29,13 @@ class HomePagingAdapter(
         val randomChildPosition = Random.nextInt(itemCount)
         val layoutParams = holder.itemView.layoutParams as StaggeredGridLayoutManager.LayoutParams
 
-        if (position == randomChildPosition){
+        /*if (position == randomChildPosition){
             layoutParams.isFullSpan = true
-        }
+        }*/
         if (item != null) {
             holder.bind(item)
+        }else{
+            layoutParams.isFullSpan = true
         }
     }
 
@@ -45,7 +48,7 @@ class HomePagingAdapter(
                 if (position != RecyclerView.NO_POSITION){
                     val item = getItem(position)
                     if (item != null){
-                        listener.onClick(item.id)
+                        listener.onClick(item.id, binding.root)
                     }
                 }
             }
@@ -69,7 +72,7 @@ class HomePagingAdapter(
     }
 
     interface OnItemClickListener {
-        fun onClick(id: String)
+        fun onClick(id: String, cardView: MaterialCardView)
     }
 
     companion object {
